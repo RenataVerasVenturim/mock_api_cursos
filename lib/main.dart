@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/cursos_page.dart';
+import 'external_modules/atividades_proex/ui/atividades_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,9 +11,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cursos UFF',
+      title: 'Atividades PROEX',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const CursosPage(),
+      home: const AtividadesPage(),
     );
   }
 }
