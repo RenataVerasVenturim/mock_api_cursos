@@ -70,38 +70,30 @@ o	Capacidade de lidar com centenas de cursos na lista sem degradar performance d
 ---
 
 ## Estrutura do Projeto
-│ main.dart
-│
-├───external_modules
-│ ├───atividades_proex
-│ │ ├───models
-│ │ │ atividade.dart
-│ │ │
-│ │ ├───services
-│ │ │ api_service.dart
-│ │ │ cursos.json
-│ │ │
-│ │ └───ui
-│ │ atividades_page.dart
-│ │
-│ └───webview
-│ ├───bindings
-│ │ webview_bindings.dart
-│ │
-│ ├───controller
-│ │ webview_controller.dart
-│ │
-│ └───ui
-│ webview_page.dart
-│
-└───utils
-│ color_pallete.dart
-│
-└───ui_components
-custom_alert_dialog.dart
-custom_progress_display.dart
-uri_launcher_helper.dart
----
+
+- main.dart
+- external_modules
+  - atividades_proex
+    - models
+      - atividade.dart
+    - services
+      - api_service.dart
+      - cursos.json
+    - ui
+      - atividades_page.dart
+  - webview
+    - bindings
+      - webview_bindings.dart
+    - controller
+      - webview_controller.dart
+    - ui
+      - webview_page.dart
+- utils
+  - color_pallete.dart
+  - ui_components
+    - custom_alert_dialog.dart
+    - custom_progress_display.dart
+    - uri_launcher_helper.dart
 
 ## Observações
 - O identificador único da atividade (`idAtividade`) é extraído do link de inscrição (`?curso=XXXX`).  
