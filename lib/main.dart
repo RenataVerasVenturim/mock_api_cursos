@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'external_modules/atividades_proex/ui/atividades_page.dart';
+import 'package:get/get.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +11,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Atividades PROEX',
+    return GetMaterialApp(
+      title: 'Meu App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const AtividadesPage(),
+      home: AtividadesPage(),
     );
   }
 }

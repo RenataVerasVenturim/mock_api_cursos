@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/atividade.dart';
 import '../services/api_service.dart';
-import '../../webview/webview_page.dart';
+import '../../webview/ui/webview_page.dart';
+import 'package:get/get.dart';
 
 enum ExerciseFilter {
   todos('Todos'),
@@ -42,18 +43,17 @@ class _AtividadesPageState extends State<AtividadesPage> {
     super.initState();
     carregarAtividades();
   }
-
-  Future<void> carregarAtividades() async {
+Future<void> carregarAtividades() async {
     try {
-      final fetchedAtividades = await ApiService.fetchAtividades();
+      final fetchedAtividades = await fetchAtividades();
       setState(() {
         atividades = fetchedAtividades;
         atividadesFiltradas = fetchedAtividades;
         isLoading = false;
       });
     } catch (e) {
-      print('Erro: $e');
       setState(() => isLoading = false);
+      //print('Erro ao carregar atividades: $e');
     }
   }
 
@@ -90,73 +90,102 @@ class _AtividadesPageState extends State<AtividadesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Atividades PROEX')),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  // Campo de busca
-                  TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Buscar atividades...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          searchController.clear();
-                          filtrarAtividades('');
-                        },
+      body: SafeArea(
+          child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 16),
+                    // Campo de busca
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar atividades...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            searchController.clear();
+                            filtrarAtividades('');
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      onChanged: filtrarAtividades,
                     ),
-                    onChanged: filtrarAtividades,
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Scroll horizontal com FilterChips
-                  SizedBox(
-                    height: 50,
-                    child: ListView(
+                    const SizedBox(height: 10),
+          
+                    // Scroll horizontal com FilterChips
+                    SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      children: ExerciseFilter.values.map((filter) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: FilterChip(
-                            label: Text(filter.label),
-                            selected: filters.contains(filter),
-                            onSelected: (_) => toggleFilter(filter),
-                          ),
-                        );
-                      }).toList(),
+                        child:Wrap(
+                          direction: Axis.horizontal,
+                          runSpacing: 4.0,
+                          spacing: 8.0,
+                          children: <Widget>[
+                          ... ExerciseFilter.values.map((filter) {
+                            return FilterChipWidget(
+                              filter: filter,
+                              isSelected: filters.contains(filter),
+                              onSelected: toggleFilter,
+                            );
+                          }),                
+                           ],
+                        ),
+                      ),
+                              
+                    // Lista de atividades filtradas usando o Card customizado
+                    Expanded(
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ListView.builder(
+                              itemCount: atividadesFiltradas.length,
+                              itemBuilder: (context, index) {
+                                final atividade = atividadesFiltradas[index];
+                                return _SampleCard(
+                                  titulo: atividade.titulo,
+                                  detalhes: atividade.detalhes,
+                                  extra:
+                                      'Carga horária: ${atividade.cargaHoraria ?? 'N/A'}\nCoordenação: ${atividade.coordenacao ?? 'N/A'}\nDescrição: ${atividade.descricaoResumida ?? 'N/A'}',
+                                  linkInscricao: atividade.linkInscricao,
+                                );
+                              },
+                            ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Lista de atividades filtradas usando o Card customizado
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: atividadesFiltradas.length,
-                      itemBuilder: (context, index) {
-                        final atividade = atividadesFiltradas[index];
-                          return _SampleCard(
-                            titulo: atividade.titulo,
-                            detalhes: '${atividade.detalhes}',
-                            extra: 
-                                'Carga horária: ${atividade.cargaHoraria ?? 'N/A'}\nCoordenação: ${atividade.coordenacao ?? 'N/A'}\nDescrição: ${atividade.descricaoResumida ?? 'N/A'}',
-                            linkInscricao: atividade.linkInscricao,
-                          );
-
-                      },
-                    ),
-                  )
-
-                ],
+          
+                  ],
+                  
+                ),
               ),
-            ),
+        ),
+    );
+  }
+}
+//filterchip class
+class FilterChipWidget extends StatelessWidget {
+  final ExerciseFilter filter;
+  final bool isSelected;
+  final Function(ExerciseFilter) onSelected;
+
+  const FilterChipWidget({
+    required this.filter,
+    required this.isSelected,
+    required this.onSelected,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(
+        filter.label,
+
+      ),
+      selected: isSelected,
+      onSelected: (_) => onSelected(filter),
+      backgroundColor: Colors.grey[200],
     );
   }
 }
@@ -188,18 +217,25 @@ class _SampleCardState extends State<_SampleCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
               widget.titulo,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            if (widget.detalhes != null) Text(widget.detalhes!),
-            const SizedBox(height: 4),
-            Row(
+          ),
+          if (widget.detalhes != null) 
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(widget.detalhes!),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
               children: [
                 TextButton.icon(
                   onPressed: () {
@@ -212,32 +248,44 @@ class _SampleCardState extends State<_SampleCard> {
                         ? Icons.arrow_drop_up
                         : Icons.arrow_drop_down,
                   ),
-                  label: Text(isExpanded ? 'Esconder detalhes' : 'Ver detalhes'),
+                  label: Text(isExpanded ? 'Esconder' : 'Ver detalhes'),
                 ),
                 const Spacer(),
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ActivityWebViewPage(
-                            url: widget.linkInscricao,
-                            titulo: widget.titulo,
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('Inscrever-se'),
-                  ),
+                OutlinedButton(
+                  onPressed: () {
+                    Get.to(
+                      () => const ActivityWebViewPage(),
+                      arguments: {
+                        'url': widget.linkInscricao,
+                        'title': widget.titulo,
+                      },
+                    );
+                  },
+                  child: const Text('Inscrever-se'),
+                ),
               ],
             ),
-            if (isExpanded && widget.extra.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(widget.extra),
+          ),
+          if (isExpanded && widget.extra.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 218, 199, 230),
+            borderRadius: BorderRadius.circular(12), // define o raio
+            boxShadow: [
+              BoxShadow(
+                // ignore: deprecated_member_use
+                color: Colors.black.withOpacity(0.3), // cor da sombra
+                offset: Offset(4, 4), // deslocamento da sombra
+                blurRadius: 6, // intensidade do desfoque
               ),
-          ],
-        ),
+            ],
+            ),
+            child: Text(widget.extra),
+          ),
+      
+        ],
       ),
     );
   }
