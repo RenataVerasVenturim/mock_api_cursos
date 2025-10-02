@@ -196,14 +196,14 @@ class _SampleCard extends StatefulWidget {
     required this.titulo,
     this.detalhes,
     this.extra = '',
-    required this.linkInscricao, // ADICIONADO
+    required this.linkInscricao, 
     Key? key,
   }) : super(key: key);
 
   final String titulo;
   final String? detalhes;
   final String extra;
-  final String linkInscricao; // ADICIONADO
+  final String linkInscricao; 
 
   @override
   State<_SampleCard> createState() => _SampleCardState();
@@ -272,13 +272,13 @@ class _SampleCardState extends State<_SampleCard> {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
             color: const Color.fromARGB(255, 218, 199, 230),
-            borderRadius: BorderRadius.circular(12), // define o raio
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.3), // cor da sombra
-                offset: Offset(4, 4), // deslocamento da sombra
-                blurRadius: 6, // intensidade do desfoque
+                color: Colors.black.withOpacity(0.3), 
+                offset: Offset(4, 4), 
+                blurRadius: 6, 
               ),
             ],
             ),
