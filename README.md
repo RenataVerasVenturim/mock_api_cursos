@@ -106,6 +106,13 @@ o	Capacidade de lidar com centenas de cursos na lista sem degradar performance d
 
 <img width="778" height="649" alt="image" src="https://github.com/user-attachments/assets/4b587e9b-67aa-46c3-8158-f5da625d8636" />
 
+## Protótipo
+
+<img width="330" height="649" alt="Screenshot_20251006-223654 api_flutter_project 2" src="https://github.com/user-attachments/assets/17126820-8a17-4918-82c3-70a9afd35f49" />
+<img width="330" height="649" alt="Screenshot_20251006-223718 api_flutter_project 1" src="https://github.com/user-attachments/assets/d60919e2-dcb5-4b57-9902-b9e3253c14f5" />
+<img width="330" height="649" alt="Screenshot_20251006-223801 api_flutter_project 1" src="https://github.com/user-attachments/assets/792af184-e926-4ddf-942d-e84abdc86e25" />
+
+
 ## Modelo conceitual e lógico , se houver inscrição futura dentro do Mobile
 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/3051521e-dde3-4764-9ffc-156add6e9511" />
