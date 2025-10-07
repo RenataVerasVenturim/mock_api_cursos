@@ -3,6 +3,8 @@ import '../models/atividade.dart';
 import '../services/api_service.dart';
 import '../../webview/ui/webview_page.dart';
 import 'package:get/get.dart';
+import '../../../utils/color_pallete.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum ExerciseFilter {
   todos('Todos'),
@@ -34,6 +36,10 @@ class _AtividadesPageState extends State<AtividadesPage> {
   List<Atividade> atividades = [];
   List<Atividade> atividadesFiltradas = [];
   bool isLoading = true;
+  final TextEditingController _ThemeController = TextEditingController();
+  final SharedPreferencesAsync asyncPrefs = SharedPreferencesAsync();
+  
+  bool _isDarkTheme = false;
 
   TextEditingController searchController = TextEditingController();
   Set<ExerciseFilter> filters = {ExerciseFilter.todos};
@@ -41,21 +47,35 @@ class _AtividadesPageState extends State<AtividadesPage> {
   @override
   void initState() {
     super.initState();
+    _loadTheme();
     carregarAtividades();
+  }  
+  Future<void> _loadTheme() async {
+    final value1 = await asyncPrefs.getBool('tema');
+    setState(() {
+      _isDarkTheme = value1 ?? false;
+    });
   }
-Future<void> carregarAtividades() async {
-    try {
-      final fetchedAtividades = await fetchAtividades();
-      setState(() {
-        atividades = fetchedAtividades;
-        atividadesFiltradas = fetchedAtividades;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-      //print('Erro ao carregar atividades: $e');
+  Future<void> _saveTheme(bool value1) async {    
+    setState(() {
+      _isDarkTheme = value1;
+    });
+    await asyncPrefs.setBool('tema', _isDarkTheme);
+  }
+
+  Future<void> carregarAtividades() async {
+      try {
+        final fetchedAtividades = await fetchAtividades();
+        setState(() {
+          atividades = fetchedAtividades;
+          atividadesFiltradas = fetchedAtividades;
+          isLoading = false;
+        });
+      } catch (e) {
+        setState(() => isLoading = false);
+        //print('Erro ao carregar atividades: $e');
+      }
     }
-  }
 
   void filtrarAtividades(String query) {
     final filtered = atividades.where((atividade) {
@@ -89,7 +109,35 @@ Future<void> carregarAtividades() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Atividades PROEX')),
+              backgroundColor:  _isDarkTheme ? Colors.black : AppColors.lightBlue(),           
+      appBar: AppBar(
+              backgroundColor:  AppColors.darkBlue(),
+              foregroundColor: Colors.white,
+              automaticallyImplyLeading: false,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                 IconButton(onPressed: () async { /*                     
+                  */}, 
+                  icon: const Icon(Icons.arrow_back)
+                  ),
+                  Expanded(child: Center(child: Text('Atividades PROEX'))),
+                  IconButton(
+                    onPressed:(){
+                      _saveTheme(!_isDarkTheme);
+                    },
+                    icon:Icon(_isDarkTheme? Icons.invert_colors: Icons.invert_colors),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    icon: const Icon(Icons.close)
+                  ),  
+
+              ],
+            ),
+          ),
       body: SafeArea(
           child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -99,7 +147,8 @@ Future<void> carregarAtividades() async {
                     // Campo de busca
                     TextField(
                       controller: searchController,
-                      decoration: InputDecoration(
+                      style:TextStyle(color: _isDarkTheme ? Colors.white : Colors.black,) ,                  
+                      decoration: InputDecoration(                        
                         hintText: 'Buscar atividades...',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: IconButton(
@@ -120,23 +169,24 @@ Future<void> carregarAtividades() async {
                     // Scroll horizontal com FilterChips
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                        child:Wrap(
-                          direction: Axis.horizontal,
-                          runSpacing: 4.0,
-                          spacing: 8.0,
-                          children: <Widget>[
-                          ... ExerciseFilter.values.map((filter) {
-                            return FilterChipWidget(
-                              filter: filter,
-                              isSelected: filters.contains(filter),
-                              onSelected: toggleFilter,
-                            );
-                          }),                
-                           ],
+                        child:Row(
+                          children: [
+                            ... ExerciseFilter.values.map((filter) {
+                              return Padding(
+                                padding: const EdgeInsets.all(2.0),
+                                child: FilterChipWidget(
+                                  filter: filter,
+                                  isSelected: filters.contains(filter),
+                                  onSelected: toggleFilter,
+                                  isDarkTheme:_isDarkTheme,
+                                ),
+                              );
+                            }),
+                          ],
                         ),
                       ),
                               
-                    // Lista de atividades filtradas usando o Card customizado
+                    // Lista de atividades filtradas
                     Expanded(
                       child: isLoading
                           ? const Center(child: CircularProgressIndicator())
@@ -150,6 +200,7 @@ Future<void> carregarAtividades() async {
                                   extra:
                                       'Carga horária: ${atividade.cargaHoraria ?? 'N/A'}\nCoordenação: ${atividade.coordenacao ?? 'N/A'}\nDescrição: ${atividade.descricaoResumida ?? 'N/A'}',
                                   linkInscricao: atividade.linkInscricao,
+                                  isDarkTheme:_isDarkTheme,
                                 );
                               },
                             ),
@@ -168,11 +219,13 @@ class FilterChipWidget extends StatelessWidget {
   final ExerciseFilter filter;
   final bool isSelected;
   final Function(ExerciseFilter) onSelected;
+  final bool isDarkTheme;
 
   const FilterChipWidget({
     required this.filter,
     required this.isSelected,
     required this.onSelected,
+    required this.isDarkTheme,
     Key? key,
   }) : super(key: key);
 
@@ -185,7 +238,12 @@ class FilterChipWidget extends StatelessWidget {
       ),
       selected: isSelected,
       onSelected: (_) => onSelected(filter),
-      backgroundColor: Colors.grey[200],
+      backgroundColor: isDarkTheme? Colors.white : AppColors.mediumBlue(),
+      selectedColor:  isDarkTheme? AppColors.mediumBlue()  : AppColors.darkBlue(), 
+      labelStyle: TextStyle(
+      color: isSelected ? (isDarkTheme ? Colors.black : Colors.white) :
+                          (isDarkTheme ? Colors.black : Colors.white),
+  ),
     );
   }
 }
@@ -196,14 +254,16 @@ class _SampleCard extends StatefulWidget {
     required this.titulo,
     this.detalhes,
     this.extra = '',
-    required this.linkInscricao, // ADICIONADO
+    required this.linkInscricao, 
+    required this.isDarkTheme,
     Key? key,
   }) : super(key: key);
 
   final String titulo;
   final String? detalhes;
   final String extra;
-  final String linkInscricao; // ADICIONADO
+  final String linkInscricao; 
+  final bool isDarkTheme;
 
   @override
   State<_SampleCard> createState() => _SampleCardState();
@@ -211,81 +271,88 @@ class _SampleCard extends StatefulWidget {
 
 
 class _SampleCardState extends State<_SampleCard> {
-  bool isExpanded = false;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              widget.titulo,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isExpanded = !_isExpanded;
+                });
+              },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                widget.titulo,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          if (widget.detalhes != null) 
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(widget.detalhes!),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      isExpanded = !isExpanded;
-                    });
-                  },
-                  icon: Icon(
-                    isExpanded
-                        ? Icons.arrow_drop_up
-                        : Icons.arrow_drop_down,
-                  ),
-                  label: Text(isExpanded ? 'Esconder' : 'Ver detalhes'),
-                ),
-                const Spacer(),
-                OutlinedButton(
-                  onPressed: () {
-                    Get.to(
-                      () => const ActivityWebViewPage(),
-                      arguments: {
-                        'url': widget.linkInscricao,
-                        'title': widget.titulo,
-                      },
-                    );
-                  },
-                  child: const Text('Inscrever-se'),
+            if (widget.detalhes != null) 
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(widget.detalhes!),
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.all(8.0),      
+              child: Row(
+                        children: [                  
+                          Icon(
+                            _isExpanded
+                                ? Icons.arrow_drop_up
+                                : Icons.arrow_drop_down,
+                          ),
+                          Text(_isExpanded ? 'Esconder' : 'Ver detalhes'),
+                          const Spacer(),
+                          OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.darkBlue(), 
+                                side: BorderSide(color: AppColors.darkBlue()), 
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8), 
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              ),
+                            onPressed: () {
+                              Get.to(
+                                () => const WebViewPage(),
+                                arguments: {
+                                  'url': widget.linkInscricao,
+                                  'title': widget.titulo,
+                                },
+                              );
+                            },
+                            child: const Text('Inscrever-se'),
+                          ),
+                        ],
+              ),
+            ),
+            if (_isExpanded && widget.extra.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+              color: widget.isDarkTheme? AppColors.darkBlue() : AppColors.lightBlue(),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  blurRadius: 6, 
                 ),
               ],
-            ),
-          ),
-          if (isExpanded && widget.extra.isNotEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 218, 199, 230),
-            borderRadius: BorderRadius.circular(12), // define o raio
-            boxShadow: [
-              BoxShadow(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.3), // cor da sombra
-                offset: Offset(4, 4), // deslocamento da sombra
-                blurRadius: 6, // intensidade do desfoque
               ),
-            ],
-            ),
-            child: Text(widget.extra),
-          ),
-      
-        ],
+              child: Text(widget.extra,
+                style:TextStyle(color: widget.isDarkTheme ? Colors.white : Colors.black,) ,
+                ),
+            ),        
+          ],
+        ),
       ),
     );
   }

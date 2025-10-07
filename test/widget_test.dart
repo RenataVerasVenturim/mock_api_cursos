@@ -7,24 +7,74 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:api_flutter_project/main.dart';
-
+import 'package:get/get.dart';
+import 'package:api_flutter_project/external_modules/atividades_proex/ui/atividades_page.dart';
+import 'package:api_flutter_project/external_modules/atividades_proex/models/atividade.dart';
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Testar busca, filtros e scroll em AtividadesPage', (WidgetTester tester) async {
+    // Monta o widget
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: AtividadesPage(
+          fetchFunction: () async => [
+            Atividade(
+              titulo: 'Curso Flutter',
+              tipo: 'Curso',
+              cargaHoraria: 2,
+              coordenacao: 'Coord A',
+              descricaoResumida: 'Descrição A',
+              linkInscricao: 'https://flutter.dev', idAtividade: '157249',
+            ),
+            Atividade(
+              titulo: 'Oficina Dart',
+              tipo: 'Oficina',
+              cargaHoraria: 1,
+              coordenacao: 'Coord B',
+              descricaoResumida: 'Descrição B',
+              linkInscricao: 'https://dart.dev', idAtividade: '157250',
+            ),
+          ],
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Aguarda o carregamento inicial
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // ===== Teste do campo de busca =====
+    final searchField = find.byType(TextField);
+    expect(searchField, findsOneWidget);
+    await tester.enterText(searchField, 'Flutter');
+    await tester.pumpAndSettle();
+    expect(find.text('Curso Flutter'), findsOneWidget);
+    expect(find.text('Oficina Dart'), findsNothing);
+    await tester.tap(find.byIcon(Icons.clear));
+    await tester.pumpAndSettle();
+    expect(find.text('Curso Flutter'), findsOneWidget);
+    expect(find.text('Oficina Dart'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // ===== Teste dos filtros =====
+    final cursoChip = find.widgetWithText(FilterChip, 'Curso');
+    final oficinaChip = find.widgetWithText(FilterChip, 'Oficina');
+    await tester.tap(cursoChip);
+    await tester.pumpAndSettle();
+    expect(find.text('Curso Flutter'), findsOneWidget);
+    expect(find.text('Oficina Dart'), findsNothing);
+    await tester.tap(oficinaChip);
+    await tester.pumpAndSettle();
+    expect(find.text('Curso Flutter'), findsOneWidget);
+    expect(find.text('Oficina Dart'), findsOneWidget);
+
+    // ===== Teste do scroll horizontal dos FilterChips =====
+    final chipsScroll = find.byType(SingleChildScrollView).first;
+    expect(chipsScroll, findsOneWidget);
+
+    // Arrastar para a esquerda
+    await tester.drag(chipsScroll, const Offset(-200.0, 0.0));
+    await tester.pumpAndSettle();
+
+    // Arrastar para a direita
+    await tester.drag(chipsScroll, const Offset(200.0, 0.0));
+    await tester.pumpAndSettle();
   });
 }

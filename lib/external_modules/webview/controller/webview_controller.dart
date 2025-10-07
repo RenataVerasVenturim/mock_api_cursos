@@ -18,7 +18,6 @@ class ActivityWebViewController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // pega os parâmetros vindos do Get.to(..., arguments: {...})
     url = Get.arguments['url'];
     title = Get.arguments['title'];
 
