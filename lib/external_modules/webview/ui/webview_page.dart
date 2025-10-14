@@ -10,7 +10,7 @@ class WebViewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ActivityWebViewController>(
-      init: ActivityWebViewController(), // aqui não precisa passar nada
+      init: ActivityWebViewController(), 
       builder: (controller) {
         return Scaffold(
           appBar: AppBar(
